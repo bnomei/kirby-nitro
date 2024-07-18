@@ -1,0 +1,73 @@
+{
+    "name": "bnomei/kirby-nitro",
+    "type": "kirby-plugin",
+    "version": "1.0.0",
+    "description": "",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bruno Meilick",
+            "email": "b@bnomei.com"
+        }
+    ],
+    "keywords": [
+        "kirby",
+        "kirby-cms",
+        "kirby-plugin",
+        "cache",
+        "files",
+        "directory",
+        "index",
+        "content",
+        "model",
+        "user",
+        "page",
+        "file",
+        "performance"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Bnomei\\": "classes/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {
+            "getkirby/composer-installer": true,
+            "pestphp/pest-plugin": true
+        }
+    },
+    "require": {
+        "php": ">=8.2.0",
+        "getkirby/composer-installer": "^1.2"
+    },
+    "require-dev": {
+        "getkirby/cms": "^4.3.0",
+        "larastan/larastan": "^2.9",
+        "laravel/pint": "^1.13",
+        "pestphp/pest": "^2.24",
+        "pestphp/pest-plugin-type-coverage": "^2.4"
+    },
+    "scripts": {
+        "analyze": "./vendor/bin/phpstan",
+        "fix": "./vendor/bin/pint",
+        "dist": [
+            "composer install --no-dev --optimize-autoloader",
+            "git rm -rf --cached .; git add .;"
+        ],
+        "kirby": [
+            "composer install",
+            "composer update",
+            "composer install --working-dir=tests/kirby --no-dev --optimize-autoloader",
+            "composer update --working-dir=tests/kirby",
+            "php tests/patch.php"
+        ]
+    },
+    "extra": {
+        "kirby-cms-path": "tests/kirby"
+    },
+    "conflict": {
+        "bnomei/kirby3-boost": "*"
+    }
+}

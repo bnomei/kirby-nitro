@@ -1,0 +1,9 @@
+preset: page
+
+fields:
+  text:
+    type: text
+
+  nt_text:
+    type: text
+    translate: false
