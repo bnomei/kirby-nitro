@@ -4,6 +4,7 @@ namespace Bnomei;
 
 use Bnomei\Nitro\DirInventory;
 use Bnomei\Nitro\SingleFileCache;
+use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\Str;
@@ -98,7 +99,7 @@ class Nitro
             return;
         }
 
-        $patch = $this->options['cacheDir'].'/files.patch';
+        $patch = $this->options['cacheDir'].'/files.'.App::versionHash().'.patch';
         if (file_exists($patch)) {
             return;
         }
@@ -113,9 +114,8 @@ class Nitro
                 if (function_exists('opcache_invalidate')) {
                     opcache_invalidate($filesClass);
                 }
-
-                F::write($patch, date('c'));
             }
+            F::write($patch, date('c'));
         }
     }
 

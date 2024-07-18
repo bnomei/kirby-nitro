@@ -2,6 +2,7 @@
 
 namespace Bnomei\Nitro;
 
+use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
@@ -124,7 +125,7 @@ class DirInventory
             return;
         }
 
-        $patch = $this->cacheDir().'/dir-inventory.patch';
+        $patch = $this->cacheDir().'/dir-inventory.'.App::versionHash().'.patch';
         if (file_exists($patch)) {
             return;
         }
@@ -155,15 +156,14 @@ CODE;
 	}
 CODE;
 
-        if (strpos($content, $head_new) !== false) {
-            return;
-        }
-        $content = str_replace($head, $head_new, $content);
-        $content = str_replace($foot, $foot_new, $content);
-        F::write($file, $content);
+        if (strpos($content, $head_new) === false) {
+            $content = str_replace($head, $head_new, $content);
+            $content = str_replace($foot, $foot_new, $content);
+            F::write($file, $content);
 
-        if (function_exists('opcache_invalidate')) {
-            opcache_invalidate($file);
+            if (function_exists('opcache_invalidate')) {
+                opcache_invalidate($file);
+            }
         }
 
         F::write($patch, date('c'));
