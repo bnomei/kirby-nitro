@@ -1,4 +1,4 @@
-# ⛽️Kirby Nitro
+# ⛽️ Kirby Nitro
 
 ![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-nitro?color=ae81ff)
 ![Downloads](https://flat.badgen.net/packagist/dt/bnomei/kirby-nitro?color=272822)
