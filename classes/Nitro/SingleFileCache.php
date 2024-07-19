@@ -21,6 +21,7 @@ class SingleFileCache extends Cache
 
         $this->options = array_merge([
             'auto-clean-cache' => option('bnomei.nitro.auto-clean-cache'),
+            'json-encode-flags' => option('bnomei.nitro.json-encode-flags'),
             'max-dirty-cache' => (int) option('bnomei.nitro.max-dirty-cache'),
             'debug' => option('debug'),
         ], $options);
@@ -56,6 +57,14 @@ class SingleFileCache extends Cache
         */
 
         $key = $this->key($key);
+
+        // flatten kirby fields
+        $value = $this->serialize($value);
+
+        // make sure the value can be stored as json
+        // if not fail here so a trace is more helpful
+        $value = json_decode(json_encode($value, $this->options['json-encode-flags']), true);
+
         $this->data[$key] = (new Value($value, $minutes))->toArray();
         $this->isDirty++;
         if ($this->isDirty > $this->options['max-dirty-cache']) {
@@ -142,14 +151,43 @@ class SingleFileCache extends Cache
         return kirby()->cache('bnomei.nitro.sfc')->root().'/single-file-cache.json';
     }
 
-    private function write(): bool
+    public function write(): bool
     {
         if ($this->isDirty === 0) {
             return false;
         }
-        F::write($this->file(), json_encode($this->data));
+        F::write($this->file(), json_encode($this->data, $this->options['json-encode-flags']));
         $this->isDirty = 0;
 
         return true;
+    }
+
+    private static function isCallable($value): bool
+    {
+        // do not call global helpers just methods or closures
+        return ! is_string($value) && is_callable($value);
+    }
+
+    public function serialize($value)
+    {
+        if (! $value) {
+            return null;
+        }
+        $value = self::isCallable($value) ? $value() : $value;
+
+        if (is_array($value)) {
+            $items = [];
+            foreach ($value as $key => $item) {
+                $items[$key] = $this->serialize($item);
+            }
+
+            return $items;
+        }
+
+        if (is_a($value, 'Kirby\Content\Field')) {
+            return $value->value();
+        }
+
+        return $value;
     }
 }

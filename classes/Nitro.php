@@ -23,6 +23,7 @@ class Nitro
             'enabled' => true,
             'cacheDir' => realpath(__DIR__.'/../').'/cache',
             'cacheType' => 'json',
+            'json-encode-flags' => JSON_THROW_ON_ERROR,
         ], $options);
 
         foreach ($this->options as $key => $value) {

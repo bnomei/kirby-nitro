@@ -2,7 +2,7 @@
     "name": "bnomei/kirby-nitro",
     "type": "kirby-plugin",
     "version": "1.0.0",
-    "description": "",
+    "description": "Nitro speeds up the loading of content in your Kirby project.",
     "license": "MIT",
     "authors": [
         {
@@ -69,5 +69,10 @@
     },
     "conflict": {
         "bnomei/kirby3-boost": "*"
+    },
+    "suggest": {
+        "bnomei/kirby-blueprints": "PHP Class-based Blueprints for Kirby CMS for better type safety and code completion.",
+        "bnomei/kirby3-lapse": "Cache any data until set expiration time (with automatic keys).",
+        "getkirby/staticache": "Static site performance on demand!"
     }
 }

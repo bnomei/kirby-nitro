@@ -18,6 +18,7 @@ class DirInventory
 
     public function __construct(array $options = [])
     {
+        // can not use option() as it might run before Kirby is loaded
         $this->options = $options;
         $this->isDirty = false;
         $this->data = [];
@@ -39,7 +40,7 @@ class DirInventory
                 opcache_invalidate($file);
             }
         } else {
-            F::write($file, json_encode($this->data));
+            F::write($file, json_encode($this->data, $this->options['json-encode-flags']));
         }
     }
 

@@ -18,6 +18,7 @@ Kirby::plugin('bnomei/nitro', [
         'patch-files-class' => true,
         'auto-clean-cache' => true,
         'max-dirty-cache' => 512, // write every N changes or on destruct
+        'json-encode-flags' => JSON_THROW_ON_ERROR, // | JSON_INVALID_UTF8_IGNORE,
         'model' => [
             'read' => true,
             'write' => true,
@@ -32,8 +33,32 @@ Kirby::plugin('bnomei/nitro', [
         },
         'page.*:after' => function ($event, $page) {
             if ($event->action() !== 'render') {
-                \Bnomei\Nitro::singleton()->flush();
+                \Bnomei\Nitro::singleton()->dir()->flush();
             }
         },
+    ],
+    'commands' => [
+        'nitro:index' => [
+            'description' => 'Run Nitro Index',
+            'args' => [],
+            'command' => static function ($cli): void {
+
+                $kirby = $cli->kirby();
+                $kirby->impersonate('kirby');
+
+                $cli->out('Indexing...');
+                $count = nitro()->modelIndex();
+                $cli->out($count.' models indexed.');
+
+                $cli->success('Done.');
+
+                if (function_exists('janitor')) {
+                    janitor()->data([
+                        'status' => 200,
+                        'message' => $count.' models indexed.',
+                    ]);
+                }
+            },
+        ],
     ],
 ]);
