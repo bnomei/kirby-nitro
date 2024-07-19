@@ -29,6 +29,15 @@ Nitro speeds up the loading of content in your Kirby project.
 - `git submodule add https://github.com/bnomei/kirby-nitro.git site/plugins/kirby-nitro` or
 - `composer require bnomei/kirby-nitro`
 
+## Checklist: When to use this plugin?
+
+- You load more than 100 but less than 2000 models (pages/files/users) in a **single request**?
+- You have less than 4000 models or 2 MB combined TXT files in your project?
+- If you load less, you do not need any performance plugins apart from maybe
+  a [key-value caching helper](https://github.com/bnomei/kirby3-lapse).
+- If you load more, you should consider [Boost](https://github.com/bnomei/kirby3-boost)
+  or [Khulan](https://github.com/bnomei/kirby-mongodb) instead.
+
 ## Setup
 
 For each template you want to be cached you need to use a model to add the content cache logic using a trait.
@@ -47,9 +56,8 @@ class DefaultPage extends \Kirby\Cms\Page
 
 ## Using the Cache
 
-You can use the single-file-based cache of nitro to store your own key-value pairs, just like with a regular cache in
-Kirby. Since the Nitro cache is fully loaded with every request I would not advise to store too many big chunks of
-data (like HTML output).
+You can use the single-file-based cache of Nitro to store your own key-value pairs, just like with a regular cache in
+Kirby.
 
 ```php
 nitro()->cache()->set('mykey', 'value');
@@ -59,10 +67,17 @@ $value = nitro()->cache()->get('mykey');
 $value = nitro()->cache()->getOrSet('mykey', fn() => 'value');
 ```
 
+> [!ATTENTION]
+> Since the Nitro cache is fully loaded with every request I would not advise to store too many big chunks of
+> data (like HTML output or when having too many models in total).
+
 ## Using the Cache Driver in Kirby
 
 You can also use the singe-file-based cache of Nitro as a **cache driver** for Kirby. This will allow you to use it for
-caching of other extensions in Kirby. I would highly recommend to use it for Kirby's UUID cache.
+caching of other extensions in Kirby.
+
+> [!NOTE]
+> I would highly recommend to use the Nitro cache for Kirby's UUID cache.
 
 **site/config/config.php**
 
