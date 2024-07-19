@@ -67,7 +67,7 @@ $value = nitro()->cache()->get('mykey');
 $value = nitro()->cache()->getOrSet('mykey', fn() => 'value');
 ```
 
-> [!ATTENTION]
+> [!WARNING]
 > Since the Nitro cache is fully loaded with every request I would not advise to store too many big chunks of
 > data (like HTML output or when having too many models in total).
 
