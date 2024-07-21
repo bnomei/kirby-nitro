@@ -21,7 +21,9 @@ jobs:
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Run Tests
-        run: ./vendor/bin/pest --coverage
+        run: |
+          php tests/patch.php
+          ./vendor/bin/pest --coverage
 
       - name: Test & publish code coverage
         uses: paambaati/codeclimate-action@v8.0.0
