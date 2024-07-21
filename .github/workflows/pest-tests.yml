@@ -36,5 +36,5 @@ jobs:
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
           debug: true
-          workingDirectory: ${{github.workspace}}
+          prefix: ${{github.workspace}}
           coverageLocations: ${{github.workspace}}/tests/clover.xml:clover
