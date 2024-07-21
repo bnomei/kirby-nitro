@@ -35,6 +35,8 @@ jobs:
         uses: paambaati/codeclimate-action@v8.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-          debug: true
-          prefix: ${{github.workspace}}
+          coverageCommand: |
+            php tests/patch.php
+            ./vendor/bin/pest --coverage
+          #prefix: ${{github.workspace}}
           coverageLocations: ${{github.workspace}}/tests/clover.xml:clover
