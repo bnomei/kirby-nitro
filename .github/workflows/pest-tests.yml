@@ -35,5 +35,6 @@ jobs:
         uses: paambaati/codeclimate-action@v8.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-          coverageLocations: |
-            ${{github.workspace}}/tests/clover.xml:clover
+          debug: true
+          workingDirectory: ${{github.workspace}}
+          coverageLocations: ${{github.workspace}}/tests/clover.xml:clover
