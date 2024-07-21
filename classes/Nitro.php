@@ -21,9 +21,6 @@ class Nitro
 
     private ?SingleFileCache $singleFileCache = null;
 
-    /**
-     * @var true
-     */
     private bool $_ready = false;
 
     public function __construct(array $options = [])
@@ -140,24 +137,27 @@ class Nitro
         $count = 0;
         foreach (site()->index(true) as $page) {
             /** @var NitroPage $page */
-            if ($page->hasNitro() === true) {
-                $page->readContent();
-                $count++;
-                foreach ($page->files() as $file) {
-                    /** @var NitroFile $file */
-                    if ($file->hasNitro() === true) {
-                        $file->readContent();
-                        $count++;
-                    }
+            if ($page->hasNitro() !== true) {
+                continue;
+            }
+            $page->readContent();
+            $count++;
+            foreach ($page->files() as $file) {
+                /** @var NitroFile $file */
+                if ($file->hasNitro() !== true) {
+                    continue;
                 }
+                $file->readContent();
+                $count++;
             }
         }
         foreach (kirby()->users() as $user) {
             /** @var NitroUser $user */
-            if ($user->hasNitro() === true) {
-                $user->readContent();
-                $count++;
+            if ($user->hasNitro() !== true) {
+                continue;
             }
+            $user->readContent();
+            $count++;
         }
 
         return $count;
