@@ -54,6 +54,10 @@
         "analyze": "./vendor/bin/phpstan",
         "fix": "./vendor/bin/pint",
         "test": "./vendor/bin/pest",
+        "coverage": [
+            "php tests/patch.php",
+            "./vendor/bin/pest --coverage"
+        ],
         "dist": [
             "composer install --no-dev --optimize-autoloader",
             "git rm -rf --cached .; git add .;"
