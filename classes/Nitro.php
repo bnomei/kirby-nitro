@@ -4,7 +4,10 @@ namespace Bnomei;
 
 use Bnomei\Nitro\DirInventory;
 use Bnomei\Nitro\SingleFileCache;
+use Closure;
+use Kirby\Cache\FileCache;
 use Kirby\Cms\App;
+use Kirby\Cms\Files;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\Str;
@@ -18,17 +21,20 @@ class Nitro
 
     private ?SingleFileCache $singleFileCache = null;
 
+    /**
+     * @var true
+     */
+    private bool $_ready = false;
+
     public function __construct(array $options = [])
     {
         $this->options = array_merge([
-            'enabled' => true,
             'cacheDir' => realpath(__DIR__.'/../').'/cache',
-            'cacheType' => 'json',
             'json-encode-flags' => JSON_THROW_ON_ERROR,
         ], $options);
 
         foreach ($this->options as $key => $value) {
-            if ($value instanceof \Closure) {
+            if ($value instanceof Closure) {
                 $this->options[$key] = $value();
             }
         }
@@ -66,6 +72,13 @@ class Nitro
         $this->replaceCacheFolderWithSymlink();
         $this->patchFilesClass();
         $this->dir()->patchDirClass();
+
+        $this->_ready = true;
+    }
+
+    public function isReady(): bool
+    {
+        return $this->_ready;
     }
 
     /*
@@ -73,12 +86,8 @@ class Nitro
      */
     private function replaceCacheFolderWithSymlink(): bool
     {
-        if (! $this->options['enabled']) {
-            return false;
-        }
-
         $internalDir = $this->options['cacheDir'];
-        /** @var \Kirby\Cache\FileCache $cache */
+        /** @var FileCache $cache */
         $cache = kirby()->cache('bnomei.nitro.dir');
         $kirbyDir = $cache->root();
 
@@ -97,18 +106,18 @@ class Nitro
         return true;
     }
 
-    private function patchFilesClass(): void
+    public function patchFilesClass(): bool
     {
         if (option('bnomei.nitro.patch-files-class') !== true) {
-            return;
+            return false;
         }
 
         $patch = $this->options['cacheDir'].'/files.'.App::versionHash().'.patch';
         if (file_exists($patch)) {
-            return;
+            return false;
         }
 
-        $filesClass = (new ReflectionClass(\Kirby\Cms\Files::class))->getFileName();
+        $filesClass = (new ReflectionClass(Files::class))->getFileName();
         if ($filesClass && F::exists($filesClass) && F::isWritable($filesClass)) {
             $code = F::read($filesClass);
             if ($code && Str::contains($code, '\Bnomei\NitroFile::factory') === false) {
@@ -116,11 +125,14 @@ class Nitro
                 F::write($filesClass, $code);
 
                 if (function_exists('opcache_invalidate')) {
-                    opcache_invalidate($filesClass);
+                    opcache_invalidate($filesClass); // @codeCoverageIgnore
                 }
             }
-            F::write($patch, date('c'));
+
+            return F::write($patch, date('c'));
         }
+
+        return false;
     }
 
     public function modelIndex(): int

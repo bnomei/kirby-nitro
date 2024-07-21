@@ -80,7 +80,7 @@ class SingleFileCache extends Cache
 
         $this->data[$key] = (new Value($value, $minutes))->toArray();
         $this->isDirty++;
-        if ($this->isDirty > $this->options['max-dirty-cache']) {
+        if ($this->isDirty >= $this->options['max-dirty-cache']) {
             $this->write();
         }
 
@@ -90,7 +90,7 @@ class SingleFileCache extends Cache
     /**
      * {@inheritDoc}
      */
-    public function retrieve(string|array $key): ?Value
+    public function retrieve(string $key): ?Value
     {
         $value = A::get($this->data, $this->key($key));
 
@@ -101,10 +101,14 @@ class SingleFileCache extends Cache
         return is_array($value) ? Value::fromArray($value) : $value;
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    public function get(array|string $key, mixed $default = null): mixed
     {
         if ($this->options['debug']) {
             return $default;
+        }
+
+        if (is_array($key)) {
+            $key = print_r($key, true);
         }
 
         return parent::get($key, $default);
@@ -119,7 +123,7 @@ class SingleFileCache extends Cache
         if (array_key_exists($key, $this->data)) {
             unset($this->data[$key]);
             $this->isDirty++;
-            if ($this->isDirty > $this->options['max-dirty-cache']) {
+            if ($this->isDirty >= $this->options['max-dirty-cache']) {
                 $this->write();
             }
         }
@@ -161,10 +165,9 @@ class SingleFileCache extends Cache
         if ($this->isDirty === 0) {
             return false;
         }
-        F::write($this->file(), json_encode($this->data, $this->options['json-encode-flags']));
         $this->isDirty = 0;
 
-        return true;
+        return F::write($this->file(), json_encode($this->data, $this->options['json-encode-flags']));
     }
 
     private static function isCallable(mixed $value): bool
@@ -194,5 +197,10 @@ class SingleFileCache extends Cache
         }
 
         return $value;
+    }
+
+    public function count(): int
+    {
+        return count($this->data);
     }
 }

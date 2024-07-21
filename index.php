@@ -43,9 +43,6 @@ Kirby::plugin('bnomei/nitro', [
             'args' => [],
             'command' => static function ($cli): void {
 
-                $kirby = $cli->kirby();
-                $kirby->impersonate('kirby');
-
                 $cli->out('Indexing...');
                 $count = nitro()->modelIndex();
                 $cli->out($count.' models indexed.');

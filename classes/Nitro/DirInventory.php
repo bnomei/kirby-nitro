@@ -14,7 +14,7 @@ class DirInventory
 
     private bool $isDirty;
 
-    private array $options = [];
+    private array $options;
 
     public function __construct(array $options = [])
     {
@@ -28,54 +28,29 @@ class DirInventory
 
     public function __destruct()
     {
-        if (! $this->isDirty || ! $this->enabled()) {
-            return;
-        }
-
-        $file = $this->file();
-
-        if ($this->cacheType() === 'php') {
-            F::write($file, '<?php'.PHP_EOL.' return '.var_export($this->data, true).';');
-            if (function_exists('opcache_invalidate')) {
-                opcache_invalidate($file);
-            }
-        } else {
-            F::write($file, json_encode($this->data, $this->options['json-encode-flags']));
-        }
+        $this->write();
     }
 
     public function file(): string
     {
-        if ($this->cacheType() === 'php') {
-            return $this->cacheDir().'/dir-inventory.php';
-        }
-
         return $this->cacheDir().'/dir-inventory.json';
     }
 
     private function load(): void
     {
-        if (! $this->enabled() || ! file_exists($this->file())) {
+        if (! file_exists($this->file())) {
             return;
         }
 
-        if ($this->cacheType() === 'php') {
-            $this->data = include $this->file();
-        } else {
-            $data = file_get_contents($this->file());
-            $data = $data ? json_decode($data, true) : [];
-            if (is_array($data) || is_null($data)) {
-                $this->data = $data;
-            }
+        $data = file_get_contents($this->file());
+        $data = $data ? json_decode($data, true) : [];
+        if (is_array($data) || is_null($data)) {
+            $this->data = $data;
         }
     }
 
     public function get(string|array $key): ?array
     {
-        if (! $this->enabled()) {
-            return null;
-        }
-
         $key = $this->key($key);
 
         return A::get($this->data, $key);
@@ -83,10 +58,6 @@ class DirInventory
 
     public function set(string|array $key, ?array $input = null): void
     {
-        if (! $this->enabled()) {
-            return;
-        }
-
         $this->isDirty = true;
         $key = $this->key($key);
         $this->data[$key] = $input;
@@ -108,31 +79,16 @@ class DirInventory
         return is_array($key) ? hash('xxh3', print_r($key, true)) : $key;
     }
 
-    private function enabled(): bool
-    {
-        return $this->options['enabled'];
-    }
-
-    private function cacheDir(): string
+    public function cacheDir(): string
     {
         return $this->options['cacheDir'];
     }
 
-    private function cacheType(): string
+    public function patchDirClass(): bool
     {
-        return $this->options['cacheType'];
-    }
-
-    public function patchDirClass(): void
-    {
-
-        if (! $this->enabled()) {
-            return;
-        }
-
         $patch = $this->cacheDir().'/dir-inventory.'.App::versionHash().'.patch';
         if (file_exists($patch)) {
-            return;
+            return false;
         }
 
         $reflection = new ReflectionClass(Dir::class);
@@ -141,7 +97,7 @@ class DirInventory
         $content = $file ? file_get_contents($file) : null;
 
         if (! $file || ! $content) {
-            return;
+            return false;
         }
 
         $head = <<<'CODE'
@@ -171,10 +127,22 @@ CODE;
             F::write($file, $content);
 
             if (function_exists('opcache_invalidate')) {
-                opcache_invalidate($file);
+                opcache_invalidate($file); // @codeCoverageIgnore
             }
         }
 
-        F::write($patch, date('c'));
+        return F::write($patch, date('c'));
+    }
+
+    public function write(): bool
+    {
+        if (! $this->isDirty) {
+            return false;
+        }
+
+        $file = $this->file();
+        $this->isDirty = false;
+
+        return F::write($file, json_encode($this->data, $this->options['json-encode-flags']));
     }
 }

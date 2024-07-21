@@ -60,7 +60,7 @@ class ArticlePage extends \Kirby\Cms\Page
 {
     use \Bnomei\ModelWithNitro;
 }
-``
+```
 
 > [!NOTE]
 > You can also use the trait for user models. File models are patched automatically.
