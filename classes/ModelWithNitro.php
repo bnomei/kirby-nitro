@@ -12,7 +12,7 @@ trait ModelWithNitro
 
     public function hasNitro(): bool
     {
-        if ($this instanceof File) {
+        if ($this instanceof File && method_exists($this->parent(), 'hasNitro')) {
             return $this->parent()->hasNitro() === true;
         }
 
@@ -28,7 +28,7 @@ trait ModelWithNitro
     {
         $key = $this->id(); // can not use UUID since content not loaded yet
         if (! $languageCode) {
-            $languageCode = kirby()->languages()->count() ? kirby()->language()->code() : null;
+            $languageCode = kirby()->languages()->count() ? kirby()->language()?->code() : null;
         }
         if ($languageCode) {
             $key = $key.'-'.$languageCode;
@@ -39,7 +39,13 @@ trait ModelWithNitro
 
     public function readContentCache(?string $languageCode = null): ?array
     {
-        return nitro()->cache()->get($this->keyNitro($languageCode));
+        $key = $this->keyNitro($languageCode);
+        $data = nitro()->cache()->get($key);
+        if (is_array($data) || is_null($data)) {
+            return $data;
+        }
+
+        return null;
     }
 
     public function readContent(?string $languageCode = null): array
@@ -81,7 +87,7 @@ trait ModelWithNitro
 
         if (kirby()->multilang()) {
             foreach (kirby()->languages() as $language) {
-                nitro()->cache()->remove($this->keyNitro($language->code()));
+                nitro()->cache()->remove($this->keyNitro($language->code())); // @phpstan-ignore-line
             }
         } else {
             nitro()->cache()->remove($this->keyNitro());
@@ -92,7 +98,8 @@ trait ModelWithNitro
 
     public function delete(bool $force = false): bool
     {
-        $success = parent::delete($force);
+        $success = parent::delete($force); // @phpstan-ignore-line
+
         $this->deleteNitro();
 
         return $success;

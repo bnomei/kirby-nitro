@@ -62,11 +62,15 @@ class DirInventory
         if ($this->cacheType() === 'php') {
             $this->data = include $this->file();
         } else {
-            $this->data = json_decode(file_get_contents($this->file()), true);
+            $data = file_get_contents($this->file());
+            $data = $data ? json_decode($data, true) : [];
+            if (is_array($data) || is_null($data)) {
+                $this->data = $data;
+            }
         }
     }
 
-    public function get($key): ?array
+    public function get(string|array $key): ?array
     {
         if (! $this->enabled()) {
             return null;
@@ -77,7 +81,7 @@ class DirInventory
         return A::get($this->data, $key);
     }
 
-    public function set($key, ?array $input = null): void
+    public function set(string|array $key, ?array $input = null): void
     {
         if (! $this->enabled()) {
             return;
@@ -99,7 +103,7 @@ class DirInventory
         $this->isDirty = true;
     }
 
-    private function key($key): string
+    private function key(string|array $key): string
     {
         return is_array($key) ? hash('xxh3', print_r($key, true)) : $key;
     }
@@ -134,7 +138,12 @@ class DirInventory
         $reflection = new ReflectionClass(Dir::class);
         $file = $reflection->getFileName();
 
-        $content = file_get_contents($file);
+        $content = $file ? file_get_contents($file) : null;
+
+        if (! $file || ! $content) {
+            return;
+        }
+
         $head = <<<'CODE'
 $items = static::read($dir, $contentIgnore);
 CODE;
@@ -156,7 +165,6 @@ CODE;
 		return $inventory;
 	}
 CODE;
-
         if (strpos($content, $head_new) === false) {
             $content = str_replace($head, $head_new, $content);
             $content = str_replace($foot, $foot_new, $content);

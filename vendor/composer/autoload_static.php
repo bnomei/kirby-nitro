@@ -34,6 +34,7 @@ class ComposerStaticInit0eeb079738a6a917b8e643d59e53f8d6
         'Bnomei\\NitroFile' => __DIR__ . '/../..' . '/classes/NitroFile.php',
         'Bnomei\\NitroPage' => __DIR__ . '/../..' . '/classes/NitroPage.php',
         'Bnomei\\NitroUser' => __DIR__ . '/../..' . '/classes/NitroUser.php',
+        'Bnomei\\Nitro\\AbortCachingExeption' => __DIR__ . '/../..' . '/classes/Nitro/AbortCachingExeption.php',
         'Bnomei\\Nitro\\DirInventory' => __DIR__ . '/../..' . '/classes/Nitro/DirInventory.php',
         'Bnomei\\Nitro\\SingleFileCache' => __DIR__ . '/../..' . '/classes/Nitro/SingleFileCache.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',

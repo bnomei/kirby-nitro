@@ -3,6 +3,7 @@
 namespace Bnomei\Nitro;
 
 use Kirby\Cache\Cache;
+use Kirby\Cache\FileCache;
 use Kirby\Cache\Value;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
@@ -17,16 +18,20 @@ class SingleFileCache extends Cache
 
     public function __construct(array $options = [])
     {
-        parent::__construct();
+        parent::__construct($options);
 
         $this->options = array_merge([
             'auto-clean-cache' => option('bnomei.nitro.auto-clean-cache'),
             'json-encode-flags' => option('bnomei.nitro.json-encode-flags'),
-            'max-dirty-cache' => (int) option('bnomei.nitro.max-dirty-cache'),
+            'max-dirty-cache' => intval(option('bnomei.nitro.max-dirty-cache')), // @phpstan-ignore-line
             'debug' => option('debug'),
         ], $options);
 
-        $this->data = F::exists($this->file()) ? json_decode(F::read($this->file()), true) : [];
+        $data = F::exists($this->file()) ? F::read($this->file()) : null;
+        $data = $data ? json_decode($data, true) : null;
+        if (is_array($data)) {
+            $this->data = $data;
+        }
 
         if ($this->options['auto-clean-cache']) {
             $this->clean();
@@ -38,8 +43,11 @@ class SingleFileCache extends Cache
         $this->write();
     }
 
-    public function key(string $key): string
+    public function key(string|array $key): string
     {
+        if (is_array($key)) {
+            $key = print_r($key, true);
+        }
         $key = parent::key($key);
 
         return hash('xxh3', $key);
@@ -48,7 +56,7 @@ class SingleFileCache extends Cache
     /**
      * {@inheritDoc}
      */
-    public function set(string $key, $value, int $minutes = 0): bool
+    public function set(string|array $key, mixed $value, int $minutes = 0): bool
     {
         /* SHOULD SET EVEN IN DEBUG
         if ($this->option('debug')) {
@@ -59,11 +67,16 @@ class SingleFileCache extends Cache
         $key = $this->key($key);
 
         // flatten kirby fields
-        $value = $this->serialize($value);
+        try {
+            $value = $this->serialize($value);
+        } catch (AbortCachingExeption $e) {
+            return false;
+        }
 
         // make sure the value can be stored as json
         // if not fail here so a trace is more helpful
-        $value = json_decode(json_encode($value, $this->options['json-encode-flags']), true);
+        $json_encode = json_encode($value, $this->options['json-encode-flags']);
+        $value = $json_encode ? json_decode($json_encode, true) : null;
 
         $this->data[$key] = (new Value($value, $minutes))->toArray();
         $this->isDirty++;
@@ -77,7 +90,7 @@ class SingleFileCache extends Cache
     /**
      * {@inheritDoc}
      */
-    public function retrieve(string $key): ?Value
+    public function retrieve(string|array $key): ?Value
     {
         $value = A::get($this->data, $this->key($key));
 
@@ -88,7 +101,7 @@ class SingleFileCache extends Cache
         return is_array($value) ? Value::fromArray($value) : $value;
     }
 
-    public function get(string $key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         if ($this->options['debug']) {
             return $default;
@@ -100,7 +113,7 @@ class SingleFileCache extends Cache
     /**
      * {@inheritDoc}
      */
-    public function remove(string $key): bool
+    public function remove(string|array $key): bool
     {
         $key = $this->key($key);
         if (array_key_exists($key, $this->data)) {
@@ -128,17 +141,6 @@ class SingleFileCache extends Cache
         return true;
     }
 
-    private static ?self $singleton = null;
-
-    public static function singleton(array $options = []): SingleFileCache
-    {
-        if (is_null(self::$singleton)) {
-            self::$singleton = new SingleFileCache($options);
-        }
-
-        return self::$singleton;
-    }
-
     private function clean(): void
     {
         foreach ($this->data as $key => $value) {
@@ -146,9 +148,12 @@ class SingleFileCache extends Cache
         }
     }
 
-    private function file()
+    protected function file(?string $key = null): string
     {
-        return kirby()->cache('bnomei.nitro.sfc')->root().'/single-file-cache.json';
+        /** @var FileCache $cache */
+        $cache = kirby()->cache('bnomei.nitro.sfc');
+
+        return $cache->root().'/single-file-cache.json';
     }
 
     public function write(): bool
@@ -162,18 +167,18 @@ class SingleFileCache extends Cache
         return true;
     }
 
-    private static function isCallable($value): bool
+    private static function isCallable(mixed $value): bool
     {
         // do not call global helpers just methods or closures
         return ! is_string($value) && is_callable($value);
     }
 
-    public function serialize($value)
+    public function serialize(mixed $value): mixed
     {
         if (! $value) {
             return null;
         }
-        $value = self::isCallable($value) ? $value() : $value;
+        $value = self::isCallable($value) ? $value() : $value; // @phpstan-ignore-line
 
         if (is_array($value)) {
             $items = [];

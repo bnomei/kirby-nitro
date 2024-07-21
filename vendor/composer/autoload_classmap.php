@@ -11,6 +11,7 @@ return array(
     'Bnomei\\NitroFile' => $baseDir . '/classes/NitroFile.php',
     'Bnomei\\NitroPage' => $baseDir . '/classes/NitroPage.php',
     'Bnomei\\NitroUser' => $baseDir . '/classes/NitroUser.php',
+    'Bnomei\\Nitro\\AbortCachingExeption' => $baseDir . '/classes/Nitro/AbortCachingExeption.php',
     'Bnomei\\Nitro\\DirInventory' => $baseDir . '/classes/Nitro/DirInventory.php',
     'Bnomei\\Nitro\\SingleFileCache' => $baseDir . '/classes/Nitro/SingleFileCache.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',

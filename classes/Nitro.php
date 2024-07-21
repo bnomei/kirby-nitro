@@ -8,6 +8,7 @@ use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\Str;
+use ReflectionClass;
 
 class Nitro
 {
@@ -54,7 +55,7 @@ class Nitro
     public function cache(): SingleFileCache
     {
         if (! $this->singleFileCache) {
-            $this->singleFileCache = SingleFileCache::singleton($this->options);
+            $this->singleFileCache = new SingleFileCache($this->options);
         }
 
         return $this->singleFileCache;
@@ -77,7 +78,9 @@ class Nitro
         }
 
         $internalDir = $this->options['cacheDir'];
-        $kirbyDir = kirby()->cache('bnomei.nitro.dir')->root();
+        /** @var \Kirby\Cache\FileCache $cache */
+        $cache = kirby()->cache('bnomei.nitro.dir');
+        $kirbyDir = $cache->root();
 
         if (! file_exists($internalDir)) {
             Dir::make($internalDir);
@@ -94,7 +97,7 @@ class Nitro
         return true;
     }
 
-    private function patchFilesClass()
+    private function patchFilesClass(): void
     {
         if (option('bnomei.nitro.patch-files-class') !== true) {
             return;
@@ -105,10 +108,10 @@ class Nitro
             return;
         }
 
-        $filesClass = kirby()->roots()->kirby().'/src/Cms/Files.php';
-        if (F::exists($filesClass) && F::isWritable($filesClass)) {
+        $filesClass = (new ReflectionClass(\Kirby\Cms\Files::class))->getFileName();
+        if ($filesClass && F::exists($filesClass) && F::isWritable($filesClass)) {
             $code = F::read($filesClass);
-            if (Str::contains($code, '\Bnomei\NitroFile::factory') === false) {
+            if ($code && Str::contains($code, '\Bnomei\NitroFile::factory') === false) {
                 $code = str_replace('File::factory(', '\Bnomei\NitroFile::factory(', $code);
                 F::write($filesClass, $code);
 
@@ -124,10 +127,12 @@ class Nitro
     {
         $count = 0;
         foreach (site()->index(true) as $page) {
+            /** @var NitroPage $page */
             if ($page->hasNitro() === true) {
                 $page->readContent();
                 $count++;
                 foreach ($page->files() as $file) {
+                    /** @var NitroFile $file */
                     if ($file->hasNitro() === true) {
                         $file->readContent();
                         $count++;
@@ -136,6 +141,7 @@ class Nitro
             }
         }
         foreach (kirby()->users() as $user) {
+            /** @var NitroUser $user */
             if ($user->hasNitro() === true) {
                 $user->readContent();
                 $count++;
@@ -165,10 +171,10 @@ class Nitro
 
     public static function singleton(array $options = []): self
     {
-        if (is_null(static::$singleton)) {
-            static::$singleton = new static($options);
+        if (is_null(self::$singleton)) {
+            self::$singleton = new self($options);
         }
 
-        return static::$singleton;
+        return self::$singleton;
     }
 }

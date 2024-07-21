@@ -2,9 +2,9 @@
 
 ![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-nitro?color=ae81ff)
 ![Downloads](https://flat.badgen.net/packagist/dt/bnomei/kirby-nitro?color=272822)
-[![Build Status](https://flat.badgen.net/travis/bnomei/kirby-nitro)](https://travis-ci.com/bnomei/kirby-nitro)
+[![Coverage](https://flat.badgen.net/codeclimate/coverage/bnomei/kirby-nitro)](https://codeclimate.com/github/bnomei/kirby-nitro)
 [![Maintainability](https://flat.badgen.net/codeclimate/maintainability/bnomei/kirby-nitro)](https://codeclimate.com/github/bnomei/kirby-nitro)
-[![Twitter](https://flat.badgen.net/badge/twitter/bnomei?color=66d9ef)](https://twitter.com/bnomei)
+[![Discord](https://flat.badgen.net/badge/discord/bnomei?color=7289da)](https://twitter.com/bnomei)
 
 Nitro speeds up the loading of content in your Kirby project.
 
@@ -51,6 +51,17 @@ class DefaultPage extends \Kirby\Cms\Page
 }
 ```
 
+or
+
+**site/models/article.php**
+
+```php
+class ArticlePage extends \Kirby\Cms\Page
+{
+    use \Bnomei\ModelWithNitro;
+}
+``
+
 > [!NOTE]
 > You can also use the trait for user models. File models are patched automatically.
 
@@ -65,6 +76,20 @@ nitro()->cache()->set('mykey', 'value', 1);
 
 $value = nitro()->cache()->get('mykey');
 $value = nitro()->cache()->getOrSet('mykey', fn() => 'value');
+```
+
+The Nitro cache is a bit smarter than the default cache in Kirby. It allows you optionally provide keys as arrays, it
+will serialize values automatically (like Kirby fields to their `->value()`) and storing a value can be canceled.
+
+```php
+nitro()->cache()->set(['articles', $page->slug()], $page->title());
+
+nitro()->cache()->set('test', function () {
+    // ... some logic
+    if($cancel) {
+        throw new \Bnomei\Nitro\AbortCachingExeption();
+    }
+});
 ```
 
 > [!WARNING]

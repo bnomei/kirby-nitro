@@ -4,6 +4,7 @@ use Bnomei\Nitro;
 
 beforeEach(function () {
     nitro()->flush(); // cleanup
+    nitro()->cache()->flush(); // cleanup
 });
 
 it('can has an singleton', function () {
@@ -52,4 +53,14 @@ it('will not use the cache in debug mode', function () {
     expect(nitro()->cache()->get('test'))->toBeNull();
 
     Nitro::$singleton = null;
+});
+
+it('can abort caching a value', function () {
+    $cache = nitro()->cache();
+    $cache->set('test', 'value');
+    $cache->set('test', function () {
+        throw new \Bnomei\Nitro\AbortCachingExeption();
+    });
+
+    expect($cache->get('test'))->toBe('value');
 });
