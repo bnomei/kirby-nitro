@@ -36,6 +36,11 @@ Kirby::plugin('bnomei/nitro', [
                 \Bnomei\Nitro::singleton()->dir()->flush();
             }
         },
+        'file.*:after' => function ($event, $page) {
+            if ($event->action() !== 'render') {
+                \Bnomei\Nitro::singleton()->dir()->flush();
+            }
+        },
     ],
     'commands' => [
         'nitro:index' => [
