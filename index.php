@@ -36,7 +36,7 @@ Kirby::plugin('bnomei/nitro', [
                 \Bnomei\Nitro::singleton()->dir()->flush();
             }
         },
-        'file.*:after' => function ($event, $page) {
+        'file.*:after' => function ($event, $file) {
             if ($event->action() !== 'render') {
                 \Bnomei\Nitro::singleton()->dir()->flush();
             }
@@ -48,6 +48,9 @@ Kirby::plugin('bnomei/nitro', [
             'args' => [],
             'command' => static function ($cli): void {
 
+                $cli->out('Flushing...');
+                nitro()->flush();
+
                 $cli->out('Indexing...');
                 $count = nitro()->modelIndex();
                 $cli->out($count.' models indexed.');
@@ -58,6 +61,24 @@ Kirby::plugin('bnomei/nitro', [
                     janitor()->data([
                         'status' => 200,
                         'message' => $count.' models indexed.',
+                    ]);
+                }
+            },
+        ],
+        'nitro:flush' => [
+            'description' => 'Flush Nitro Cache',
+            'args' => [],
+            'command' => static function ($cli): void {
+
+                $cli->out('Flushing...');
+                nitro()->flush();
+
+                $cli->success('Done.');
+
+                if (function_exists('janitor')) {
+                    janitor()->data([
+                        'status' => 200,
+                        'message' => 'Nitro Cache flushed.',
                     ]);
                 }
             },

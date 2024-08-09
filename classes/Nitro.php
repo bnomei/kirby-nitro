@@ -165,6 +165,10 @@ class Nitro
 
     public function flush(): void
     {
+        // reset in memory cache as it will be written on destruct
+        // and thus would survive the flushing of the directories
+        $this->cache()->flush();
+
         $internalDir = $this->options['cacheDir'];
         if (Dir::exists($internalDir)) {
             // preserve inode of dir in removing files/dirs within not root folder itself
