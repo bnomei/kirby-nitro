@@ -58,7 +58,7 @@ Kirby::plugin('bnomei/nitro', [
                 $cli->success('Done.');
 
                 if (function_exists('janitor')) {
-                    janitor()->data([
+                    janitor()->data($cli->arg('command'), [
                         'status' => 200,
                         'message' => $count.' models indexed.',
                     ]);
@@ -76,7 +76,7 @@ Kirby::plugin('bnomei/nitro', [
                 $cli->success('Done.');
 
                 if (function_exists('janitor')) {
-                    janitor()->data([
+                    janitor()->data($cli->arg('command'), [
                         'status' => 200,
                         'message' => 'Nitro Cache flushed.',
                     ]);
