@@ -52,6 +52,23 @@ of your request to maintain data consistency. This will make it behave like a da
 > No matter how many php-fpm workers you have, only one will be running at a time when Nitro is in atomic mode! You have
 > been warned! But this is the only way to guarantee data consistency, and it will still be wicked fast.
 
+## Usecase
+
+The plugin will speed up Kirby setups, loading 100-2000 page models in a single request by providing a special
+cache. It solves the three major performance bottlenecks in Kirby that I know of and links the cache between CLI and
+HTTP requests.
+
+It does this by:
+
+- Providing a regular file cache you can use yourself. But the cache is always fully loaded in every request and only
+  uses a single file, which makes it wicked fast.
+- Optionally you can use that cache for storing the UUID to page ID relations. So instead of loading a single file for
+  every page model UUID resolution, the cache will have them ready instantly.
+- It allows you to store the TXT content of selected page/file/user models in the cache to speed up the loading time of
+  content.
+- I uses a second cache, which will cache `Dir::index` results. This will skip crawling the file structure step in
+  populating the full index from the cache until you update any page/file.
+
 ## Setup
 
 For each template you want to be cached you need to use a model to add the content cache logic using a trait.
