@@ -21,8 +21,12 @@ class SingleFileCache extends Cache
         parent::__construct($options);
 
         $this->options = array_merge([
+            'global' => option('bnomei.nitro.global'),
+            'atomic' => option('bnomei.nitro.atomic'),
+            'sleep' => option('bnomei.nitro.sleep'),
             'auto-clean-cache' => option('bnomei.nitro.auto-clean-cache'),
             'json-encode-flags' => option('bnomei.nitro.json-encode-flags'),
+            'cacheDir' => realpath(__DIR__.'/../').'/cache', // must be here as well for when used without nitro like as uuid cache
             'max-dirty-cache' => intval(option('bnomei.nitro.max-dirty-cache')), // @phpstan-ignore-line
             'debug' => option('debug'),
         ], $options);
@@ -36,11 +40,13 @@ class SingleFileCache extends Cache
         if ($this->options['auto-clean-cache']) {
             $this->clean();
         }
+
+        $this->atomic();
     }
 
     public function __destruct()
     {
-        $this->write();
+        $this->write(lock: false);
     }
 
     public function key(string|array $key): string
@@ -134,13 +140,15 @@ class SingleFileCache extends Cache
     /**
      * {@inheritDoc}
      */
-    public function flush(): bool
+    public function flush(bool $write = true): bool
     {
         if (count($this->data) === 0) {
             $this->isDirty++;
         }
         $this->data = [];
-        $this->write();
+        if ($write) {
+            $this->write();
+        }
 
         return true;
     }
@@ -155,19 +163,34 @@ class SingleFileCache extends Cache
     protected function file(?string $key = null): string
     {
         /** @var FileCache $cache */
-        $cache = kirby()->cache('bnomei.nitro.sfc');
+        if ($this->options['global']) {
+            $cache = $this->options['cacheDir'];
+        } else {
+            $cache = kirby()->cache('bnomei.nitro.sfc')->root();
+        }
 
-        return $cache->root().'/single-file-cache.json';
+        return $cache.'/single-file-cache.json';
     }
 
-    public function write(): bool
+    public function write(bool $lock = true): bool
     {
+        $this->unlock();
+
         if ($this->isDirty === 0) {
+            if ($lock) {
+                $this->unlock();
+            }
+
             return false;
         }
         $this->isDirty = 0;
 
-        return F::write($this->file(), json_encode($this->data, $this->options['json-encode-flags']));
+        $success = F::write($this->file(), json_encode($this->data, $this->options['json-encode-flags']));
+        if ($lock) {
+            $this->lock();
+        }
+
+        return $success;
     }
 
     private static function isCallable(mixed $value): bool
@@ -202,5 +225,59 @@ class SingleFileCache extends Cache
     public function count(): int
     {
         return count($this->data);
+    }
+
+    private function isLocked()
+    {
+        if (! $this->options['atomic']) {
+            return false;
+        }
+
+        return F::exists($this->file().'.lock');
+    }
+
+    public function lock(): bool
+    {
+        if (! $this->options['atomic']) {
+            return false;
+        }
+
+        return F::write($this->file().'.lock', date('c'));
+    }
+
+    public function unlock(): bool
+    {
+        if (! $this->options['atomic']) {
+            return false;
+        }
+
+        return F::remove($this->file().'.lock');
+    }
+
+    private function atomic(): bool
+    {
+        if (! $this->options['atomic']) {
+            return false;
+        }
+
+        // this is what makes it atomic
+        // get php max execution time
+        $maxExecutionTime = (int) ini_get('max_execution_time');
+        if ($maxExecutionTime === 0) {
+            $maxExecutionTime = 30; // default, might happen in xdebug mode
+        }
+        $maxCycles = $maxExecutionTime * 1000 * 1000; // seconds to microseconds
+        $sleep = $this->options['sleep'];
+
+        while ($this->isLocked()) {
+            $maxCycles -= $sleep;
+            if ($maxCycles <= 0) {
+                throw new \Exception('Something is very wrong. SingleFileCache could not get lock within '.$maxExecutionTime.' seconds! Are using xdebug breakpoints or maybe you need to forcibly `kirby nitro:unlock`?');
+            }
+
+            usleep($sleep);
+        }
+
+        return $this->lock();
     }
 }

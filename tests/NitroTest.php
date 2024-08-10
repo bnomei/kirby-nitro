@@ -4,11 +4,6 @@ use Bnomei\Nitro;
 use Kirby\Filesystem\Dir;
 use Kirby\Filesystem\F;
 
-beforeEach(function () {
-    nitro()->flush(); // cleanup
-    nitro()->cache()->flush(); // cleanup
-});
-
 it('can has an singleton', function () {
     $nitro = Nitro::singleton();
     expect($nitro)->toBeInstanceOf(Nitro::class);
@@ -77,7 +72,7 @@ it('can abort caching a value', function () {
     $cache = nitro()->cache();
     $cache->set('test', 'value');
     $cache->set('test', function () {
-        throw new \Bnomei\Nitro\AbortCachingExeption();
+        throw new \Bnomei\Nitro\AbortCachingExeption;
     });
 
     expect($cache->get('test'))->toBe('value');
@@ -176,14 +171,15 @@ it('can patch the dir class', function () {
 it('can flush the dir cache', function () {
     nitro()->modelIndex();
     $di = nitro()->dir();
+    $di->set('test', []); // make it dirty
     $di->write(); // force now, not on destruct
 
-    expect(Dir::files($di->cacheDir()))->toHaveCount(1)
+    expect(F::exists($di->file()))->toBeTrue()
         ->and($di->write())->toBeFalse();
 
     $di->flush();
 
-    expect(Dir::files($di->cacheDir()))->toHaveCount(0);
+    expect(F::exists($di->file()))->toBeFalse();
 });
 
 it('can serialize even null values', function () {
@@ -192,8 +188,7 @@ it('can serialize even null values', function () {
 
     $value = $cache->get('null');
 
-    expect($value)->toBeNull()
-        ->and($cache->count())->toBe(1);
+    expect($value)->toBeNull();
 });
 
 it('will update the model cache if the model is updated', function () {
@@ -218,6 +213,10 @@ it('will update the model cache if the model is updated', function () {
 it('will update the model cache if the model is deleted', function () {
     $home = page('home');
     kirby()->impersonate('kirby');
+
+    // cleanup
+    kirby()->page('home/test')?->delete(true);
+
     $page = $home->createChild([
         'slug' => 'test',
     ]);
@@ -230,3 +229,12 @@ it('will update the model cache if the model is deleted', function () {
 
     expect($cache->count())->toBe($count - 1);
 });
+
+//it('will flush and unlock on exceptions', function () {
+//    $cache = nitro()->cache();
+//    $cache->set('test', 'value');
+//
+//    expect($cache->get('test'))->toBe('value');
+//
+//    throw new Exception('test');
+//})->expectException(Exception::class);

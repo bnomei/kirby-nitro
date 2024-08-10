@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'Bnomei\\ModelWithNitro' => $baseDir . '/classes/ModelWithNitro.php',
     'Bnomei\\Nitro' => $baseDir . '/classes/Nitro.php',
+    'Bnomei\\NitroCache' => $baseDir . '/classes/NitroCache.php',
     'Bnomei\\NitroFile' => $baseDir . '/classes/NitroFile.php',
     'Bnomei\\NitroPage' => $baseDir . '/classes/NitroPage.php',
     'Bnomei\\NitroUser' => $baseDir . '/classes/NitroUser.php',

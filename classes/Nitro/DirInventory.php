@@ -63,15 +63,17 @@ class DirInventory
         $this->data[$key] = $input;
     }
 
-    public function flush(): void
+    public function flush(bool $write = true): void
     {
-        $file = $this->file();
-        if (file_exists($file)) {
-            unlink($file);
-        }
-
         $this->data = [];
         $this->isDirty = true;
+
+        if ($write) {
+            $file = $this->file();
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        }
     }
 
     private function key(string|array $key): string

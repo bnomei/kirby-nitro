@@ -167,7 +167,8 @@ class Nitro
     {
         // reset in memory cache as it will be written on destruct
         // and thus would survive the flushing of the directories
-        $this->cache()->flush();
+        $this->cache()->flush(write: false);
+        $this->dir()->flush(write: false);
 
         $internalDir = $this->options['cacheDir'];
         if (Dir::exists($internalDir)) {
@@ -179,8 +180,6 @@ class Nitro
                 Dir::remove($dir);
             }
         }
-
-        $this->dir()->flush();
     }
 
     public static ?self $singleton = null;

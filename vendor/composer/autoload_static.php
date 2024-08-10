@@ -31,6 +31,7 @@ class ComposerStaticInit0eeb079738a6a917b8e643d59e53f8d6
     public static $classMap = array (
         'Bnomei\\ModelWithNitro' => __DIR__ . '/../..' . '/classes/ModelWithNitro.php',
         'Bnomei\\Nitro' => __DIR__ . '/../..' . '/classes/Nitro.php',
+        'Bnomei\\NitroCache' => __DIR__ . '/../..' . '/classes/NitroCache.php',
         'Bnomei\\NitroFile' => __DIR__ . '/../..' . '/classes/NitroFile.php',
         'Bnomei\\NitroPage' => __DIR__ . '/../..' . '/classes/NitroPage.php',
         'Bnomei\\NitroUser' => __DIR__ . '/../..' . '/classes/NitroUser.php',

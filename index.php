@@ -15,6 +15,9 @@ Kirby::plugin('bnomei/nitro', [
             'sfc' => true,
             'dir' => true,
         ],
+        'global' => true,
+        'atomic' => true,
+        'sleep' => 1_000, // MICROSECONDS with usleep, 1ms
         'patch-files-class' => true,
         'auto-clean-cache' => true,
         'max-dirty-cache' => 512, // write every N changes or on destruct
@@ -25,7 +28,7 @@ Kirby::plugin('bnomei/nitro', [
         ],
     ],
     'cacheTypes' => [
-        'nitro' => \Bnomei\Nitro\SingleFileCache::class,
+        'nitro' => \Bnomei\NitroCache::class,
     ],
     'hooks' => [
         'system.loadPlugins:after' => function () {
@@ -41,44 +44,73 @@ Kirby::plugin('bnomei/nitro', [
                 \Bnomei\Nitro::singleton()->dir()->flush();
             }
         },
+        'system.exception' => function (Throwable $exception) {
+            // flush and unlock nitro if an exception occurs
+            \Bnomei\Nitro::singleton()->dir()->flush();
+            \Bnomei\Nitro::singleton()->cache()->flush();
+            \Bnomei\Nitro::singleton()->cache()->unlock();
+        },
     ],
     'commands' => [
-        'nitro:index' => [
-            'description' => 'Run Nitro Index',
-            'args' => [],
-            'command' => static function ($cli): void {
-
-                $cli->out('Flushing...');
-                nitro()->flush();
-
-                $cli->out('Indexing...');
-                $count = nitro()->modelIndex();
-                $cli->out($count.' models indexed.');
-
-                $cli->success('Done.');
-
-                if (function_exists('janitor')) {
-                    janitor()->data($cli->arg('command'), [
-                        'status' => 200,
-                        'message' => $count.' models indexed.',
-                    ]);
-                }
-            },
-        ],
         'nitro:flush' => [
             'description' => 'Flush Nitro Cache',
             'args' => [],
             'command' => static function ($cli): void {
 
-                $cli->out('Flushing...');
+                $cli->out('🚽 Flushing...');
                 nitro()->flush();
 
-                $cli->success('Done.');
+                $cli->success('✅ Done.');
 
                 if (function_exists('janitor')) {
                     janitor()->data($cli->arg('command'), [
                         'status' => 200,
                         'message' => 'Nitro Cache flushed.',
+                    ]);
+                }
+            },
+        ],
+        'nitro:unlock' => [
+            'description' => 'Forcibly removes the lock of a Nitro Cache',
+            'args' => [],
+            'command' => static function ($cli): void {
+
+                $cli->out('🛼 Unlocking...');
+                $success = nitro()->cache()->unlock();
+                $success ? $cli->success('🔓 Unlocked.') : $cli->error('❌ Failed.');
+
+                // the flush is necessary as the current instance might not have valid data anymore
+                $cli->out('🚽 Flushing...');
+                nitro()->flush();
+
+                $cli->success('✅ Done.');
+
+                if (function_exists('janitor')) {
+                    janitor()->data($cli->arg('command'), [
+                        'status' => 200,
+                        'message' => $success ? 'Unlocked' : 'Failed',
+                    ]);
+                }
+            },
+        ],
+        'nitro:index' => [
+            'description' => 'Run Nitro Index',
+            'args' => [],
+            'command' => static function ($cli): void {
+
+                $cli->out('🚽 Flushing...');
+                nitro()->flush();
+
+                $cli->out('🔎 Indexing...');
+                $count = nitro()->modelIndex();
+                $cli->out($count.' models indexed.');
+
+                $cli->success('✅ Done.');
+
+                if (function_exists('janitor')) {
+                    janitor()->data($cli->arg('command'), [
+                        'status' => 200,
+                        'message' => $count.' models indexed.',
                     ]);
                 }
             },

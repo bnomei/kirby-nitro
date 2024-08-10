@@ -37,6 +37,20 @@ Nitro speeds up the loading of content in your Kirby project.
   a [key-value caching helper](https://github.com/bnomei/kirby3-lapse).
 - If you load more, you should consider [Boost](https://github.com/bnomei/kirby3-boost)
   or [Khulan](https://github.com/bnomei/kirby-mongodb) instead.
+- If you need to process multiple requests fully concurrently you should not use this plugin. But from my experience
+  most Kirby projects do not need that.
+
+## Global & Atomic Cache
+
+The Nitro cache is a global cache. This means that the cache is shared between all HTTP_HOST environments. This will
+make it behave like a single database connection.
+
+The Nitro cache is by default an atomic cache. This means that the cache will block the cache file for the full duration
+of your request to maintain data consistency. This will make it behave like a database with locks.
+
+> [!WARNING]
+> No matter how many php-fpm workers you have, only one will be running at a time when Nitro is in atomic mode! You have
+> been warned! But this is the only way to guarantee data consistency, and it will still be wicked fast.
 
 ## Setup
 
@@ -129,6 +143,9 @@ return [
 
 | bnomei.nitro.     | Default               | Description                                                                  |            
 |-------------------|-----------------------|------------------------------------------------------------------------------|
+| global            | `true`                | all HTTP_HOSTs will share the same cache                                     |
+| atomic            | `true`                | will lock the cache while a request is processed to achieve data consistency |
+| sleep             | `1000`                | duration in MICRO seconds before checking the lock again                     |
 | auto-clean-cache  | `true`                | will clean the cache once before the first get()                             |
 | patch-dir-class   | always on             | monkey-patch the \Kirby\Filesystem\Dir class to use Nitro for caching        |
 | patch-files-class | `true`                | monkey-patch the \Kirby\CMS\Files class to use Nitro for caching its content |
