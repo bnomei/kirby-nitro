@@ -76,7 +76,7 @@ Kirby::plugin('bnomei/nitro', [
             'command' => static function ($cli): void {
 
                 $cli->out('🛼 Unlocking...');
-                $success = nitro()->cache()->unlock();
+                $success = nitro()->cache(['atomic' => false, 'auto-clean-cache' => false])->unlock();
                 $success ? $cli->success('🔓 Unlocked.') : $cli->error('❌ Failed.');
 
                 // the flush is necessary as the current instance might not have valid data anymore

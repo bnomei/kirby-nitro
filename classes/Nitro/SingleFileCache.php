@@ -31,6 +31,8 @@ class SingleFileCache extends Cache
             'debug' => option('debug'),
         ], $options);
 
+        $this->atomic();
+
         $data = F::exists($this->file()) ? F::read($this->file()) : null;
         $data = $data ? json_decode($data, true) : null;
         if (is_array($data)) {
@@ -40,8 +42,6 @@ class SingleFileCache extends Cache
         if ($this->options['auto-clean-cache']) {
             $this->clean();
         }
-
-        $this->atomic();
     }
 
     public function __destruct()
@@ -174,6 +174,11 @@ class SingleFileCache extends Cache
 
     public function write(bool $lock = true): bool
     {
+        // if is atomic but has no file, don't write
+        if ($this->options['atomic'] && ! F::exists($this->file().'.lock')) {
+            return false;
+        }
+
         $this->unlock();
 
         if ($this->isDirty === 0) {

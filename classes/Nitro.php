@@ -55,10 +55,10 @@ class Nitro
         return $this->dirInventory;
     }
 
-    public function cache(): SingleFileCache
+    public function cache(array $options = []): SingleFileCache
     {
-        if (! $this->singleFileCache) {
-            $this->singleFileCache = new SingleFileCache($this->options);
+        if (! $this->singleFileCache || ! empty($options)) {
+            $this->singleFileCache = new SingleFileCache($this->options + $options);
         }
 
         return $this->singleFileCache;
