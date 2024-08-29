@@ -19,6 +19,7 @@ Kirby::plugin('bnomei/nitro', [
         'atomic' => true,
         'sleep' => 1_000, // MICROSECONDS with usleep, 1ms
         'patch-files-class' => true,
+        'auto-unlock-cache' => true,
         'auto-clean-cache' => true,
         'max-dirty-cache' => 512, // write every N changes or on destruct
         'json-encode-flags' => JSON_THROW_ON_ERROR, // | JSON_INVALID_UTF8_IGNORE,

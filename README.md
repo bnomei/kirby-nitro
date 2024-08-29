@@ -163,6 +163,7 @@ return [
 | global            | `true`                | all HTTP_HOSTs will share the same cache                                     |
 | atomic            | `true`                | will lock the cache while a request is processed to achieve data consistency |
 | sleep             | `1000`                | duration in MICRO seconds before checking the lock again                     |
+| auto-unlock-cache | `true`                | will forcibly unlock the cache if it could not get a lock within set time    |
 | auto-clean-cache  | `true`                | will clean the cache once before the first get()                             |
 | patch-dir-class   | always on             | monkey-patch the \Kirby\Filesystem\Dir class to use Nitro for caching        |
 | patch-files-class | `true`                | monkey-patch the \Kirby\CMS\Files class to use Nitro for caching its content |

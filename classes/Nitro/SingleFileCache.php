@@ -24,6 +24,7 @@ class SingleFileCache extends Cache
             'global' => option('bnomei.nitro.global'),
             'atomic' => option('bnomei.nitro.atomic'),
             'sleep' => option('bnomei.nitro.sleep'),
+            'auto-unlock-cache' => option('bnomei.nitro.auto-unlock-cache'),
             'auto-clean-cache' => option('bnomei.nitro.auto-clean-cache'),
             'json-encode-flags' => option('bnomei.nitro.json-encode-flags'),
             'cacheDir' => realpath(__DIR__.'/../').'/cache', // must be here as well for when used without nitro like as uuid cache
@@ -175,6 +176,7 @@ class SingleFileCache extends Cache
     public function write(bool $lock = true): bool
     {
         // if is atomic but has no file, don't write
+        // this might happen if other request force unlocked the cache
         if ($this->options['atomic'] && ! F::exists($this->file().'.lock')) {
             return false;
         }
@@ -271,16 +273,23 @@ class SingleFileCache extends Cache
         if ($maxExecutionTime === 0) {
             $maxExecutionTime = 30; // default, might happen in xdebug mode
         }
+        // leave 5 seconds for script execution
+        $maxExecutionTime = $maxExecutionTime - 5 > 0 ? $maxExecutionTime - 5 : ceil($maxExecutionTime / 2);
         $maxCycles = $maxExecutionTime * 1000 * 1000; // seconds to microseconds
         $sleep = $this->options['sleep'];
 
         while ($this->isLocked()) {
-            $maxCycles -= $sleep;
-            if ($maxCycles <= 0) {
-                throw new \Exception('Something is very wrong. SingleFileCache could not get lock within '.$maxExecutionTime.' seconds! Are using xdebug breakpoints or maybe you need to forcibly `kirby nitro:unlock`?');
-            }
-
             usleep($sleep);
+            $maxCycles -= $sleep;
+
+            if ($maxCycles <= 0) {
+                if ($this->options['auto-unlock-cache']) {
+                    $this->unlock();
+                    break;
+                } else {
+                    throw new \Exception('Something is very wrong. SingleFileCache could not get lock within ' . $maxExecutionTime . ' seconds! Are using xdebug breakpoints or maybe you need to forcibly `kirby nitro:unlock`?');
+                }
+            }
         }
 
         return $this->lock();
