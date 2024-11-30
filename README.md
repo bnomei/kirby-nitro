@@ -1,10 +1,8 @@
 # ⛽️ Kirby Nitro
 
-![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-nitro?color=ae81ff)
-![Downloads](https://flat.badgen.net/packagist/dt/bnomei/kirby-nitro?color=272822)
-[![Coverage](https://flat.badgen.net/codeclimate/coverage/bnomei/kirby-nitro)](https://codeclimate.com/github/bnomei/kirby-nitro)
-[![Maintainability](https://flat.badgen.net/codeclimate/maintainability/bnomei/kirby-nitro)](https://codeclimate.com/github/bnomei/kirby-nitro)
-[![Discord](https://flat.badgen.net/badge/discord/bnomei?color=7289da)](https://discordapp.com/users/bnomei)
+![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-nitro?color=ae81ff&icon=github&label)
+[![Discord](https://flat.badgen.net/badge/discord/bnomei?color=7289da&icon=discord&label)](https://discordapp.com/users/bnomei)
+[![Buymecoffee](https://flat.badgen.net/badge/icon/donate?icon=buymeacoffee&color=FF813F&label)](https://www.buymeacoffee.com/bnomei)
 
 Nitro speeds up the loading of content in your Kirby project.
 
