@@ -35,12 +35,12 @@ Kirby::plugin('bnomei/nitro', [
         'system.loadPlugins:after' => function () {
             \Bnomei\Nitro::singleton()->ready();
         },
-        'page.*:after' => function ($event, $page) {
+        'page.*:before' => function ($event, $page) {
             if ($event->action() !== 'render') {
                 \Bnomei\Nitro::singleton()->dir()->flush();
             }
         },
-        'file.*:after' => function ($event, $file) {
+        'file.*:before' => function ($event, $file) {
             if ($event->action() !== 'render') {
                 \Bnomei\Nitro::singleton()->dir()->flush();
             }
