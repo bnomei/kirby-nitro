@@ -1,3 +1,6 @@
+> ARCHIVED MAY 2025.
+> suggested alternative: https://github.com/bnomei/kirby-turbo
+
 # ⛽️ Kirby Nitro
 
 ![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-nitro?color=ae81ff&icon=github&label)
